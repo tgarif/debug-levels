@@ -1,0 +1,40 @@
+name: publish
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: test
+    strategy:
+      matrix:
+        node: [12, 14, 16]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: "${{ matrix.node }}"
+      - name: npm install
+        run: npm install
+      - name: run unit tests
+        run: npm run test:ci
+
+  publish:
+    runs-on: ubuntu-latest
+    name: publish
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "14"
+      - uses: JS-DevTools/npm-publish@v1
+        with:
+          package: package.json
+          token: ${{ secrets.NPM_TOKEN }}
